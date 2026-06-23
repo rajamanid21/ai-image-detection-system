@@ -1,267 +1,175 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detection Result</title>
-    <!-- Bootstrap CSS -->
+    <title>AI Image Detector - Results</title>
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1a1a2e);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+            font-family: 'Segoe UI', sans-serif;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+        }
+        @keyframes gradientBG {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
         }
         .navbar {
-            background-color: rgba(255, 255, 255, 0.95) !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.9);
         }
         .navbar-brand {
             font-weight: bold;
-            color: #667eea !important;
-            font-size: 1.5rem;
+            color: #4b6cb7 !important;
         }
-        .container {
-            max-width: 700px;
-            margin-top: 30px;
-            margin-bottom: 30px;
-            flex: 1;
+        .container-main {
+            padding: 60px 20px;
         }
         .result-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             text-align: center;
         }
-        .card-header h3 {
-            margin: 0;
-            font-weight: 600;
-        }
-        .card-body {
-            padding: 30px;
-        }
-        .image-preview {
-            text-align: center;
-            margin-bottom: 25px;
-            border: 2px solid #dee2e6;
-            border-radius: 10px;
-            padding: 10px;
-            background-color: #f8f9fa;
-        }
-        .image-preview img {
-            max-width: 100%;
-            max-height: 300px;
-            border-radius: 8px;
-        }
-        .badge-result {
+        .verdict {
             font-size: 1.5rem;
-            padding: 10px 20px;
-            border-radius: 50px;
-            margin-bottom: 15px;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 30px;
+            margin-bottom: 30px;
         }
-        .badge-ai {
-            background-color: #dc3545;
-            color: white;
-        }
-        .badge-real {
-            background-color: #28a745;
-            color: white;
-        }
-        .badge-uncertain {
-            background-color: #ffc107;
-            color: #212529;
-        }
-        .confidence-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        .progress {
-            height: 25px;
-            border-radius: 12px;
+        .ai { background: #ffe5e5; color: #c00; }
+        .real { background: #e6ffe6; color: #0a0; }
+        .image-preview img {
+            width: 60%;
+            border-radius: 15px;
             margin-bottom: 20px;
         }
-        .progress-bar {
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            font-weight: 600;
-            line-height: 25px;
+        .confidence-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #4b6cb7;
         }
-        .details {
-            background-color: #f8f9fa;
+        .progress {
+            height: 18px;
             border-radius: 10px;
+            margin: 15px auto;
+            width: 60%;
+        }
+        .progress-bar {
+            background: linear-gradient(135deg, #4b6cb7, #182848);
+        }
+
+        .detail-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
             padding: 20px;
-            margin-top: 20px;
+            margin: 15px auto;
+            max-width: 700px;
+            text-align: left;
+            backdrop-filter: blur(6px);
         }
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .detail-item:last-child {
-            border-bottom: none;
-        }
-        .detail-label {
-            font-weight: 600;
-            color: #495057;
-        }
-        .detail-value {
-            color: #212529;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            padding: 12px 30px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            transition: transform 0.2s;
-            border-radius: 50px;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        .footer {
-            background-color: rgba(0, 0, 0, 0.5);
+
+        .btn-main {
+            background: linear-gradient(135deg, #4b6cb7, #182848);
             color: white;
-            text-align: center;
-            padding: 20px 0;
-            margin-top: auto;
-            backdrop-filter: blur(5px);
-        }
-        .footer a {
-            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
             text-decoration: none;
-            font-weight: 600;
         }
-        .footer a:hover {
-            text-decoration: underline;
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border-radius: 25px;
+            padding: 12px 25px;
         }
     </style>
 </head>
+
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-robot me-2"></i>AI Image Detector
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Contact</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Main Content -->
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
     <div class="container">
-        <div class="result-card">
-            <div class="card-header">
-                <h3><i class="fas fa-chart-line me-2"></i>Analysis Result</h3>
-            </div>
-            <div class="card-body">
-                <!-- Image Preview -->
+        <a class="navbar-brand" href="/">AI Image Detector</a>
+    </div>
+</nav>
+<div class="container container-main">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="result-card">
+                {% if result.error %}
+                    <div class="alert alert-danger">{{ result.error }}</div>
+                    <a href="/" class="btn-main">Go Back</a>
+                {% else %}
+                <!-- Verdict -->
+                {% if result.is_ai_generated %}
+                    <div class="verdict ai">🤖 AI Generated Image</div>
+                {% else %}
+                    <div class="verdict real">📷 Real Image</div>
+                {% endif %}
+                <!-- IMAGE CENTER -->
                 <div class="image-preview">
-                    <img src="{{ url_for('uploaded_file', filename=filename) }}" alt="Uploaded Image" class="img-fluid">
+                    <img src="{{ url_for('static', filename=image_path) }}">
                 </div>
-
-                <!-- Result Badge -->
-                <div class="text-center">
-                    {% if result.label == 'AI-Generated' %}
-                        <span class="badge-result badge-ai"><i class="fas fa-robot me-2"></i>{{ result.label }}</span>
-                    {% elif result.label == 'Real' %}
-                        <span class="badge-result badge-real"><i class="fas fa-camera me-2"></i>{{ result.label }}</span>
+                <!-- CONFIDENCE BELOW IMAGE -->
+                <h4>Confidence Score</h4>
+                <div class="confidence-value">{{ result.confidence }}%</div>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ result.confidence }}%"></div>
+                </div>
+                <p class="text-muted">
+                    {% if result.confidence < 40 %}
+                        Low confidence
+                    {% elif result.confidence < 70 %}
+                        Medium confidence
                     {% else %}
-                        <span class="badge-result badge-uncertain"><i class="fas fa-question-circle me-2"></i>{{ result.label }}</span>
+                        High confidence
                     {% endif %}
+                </p>
+                <!-- DETAILS CENTER CARDS -->
+                <div class="mt-5">
+                    <h4>Detailed Analysis</h4>
+                    {% for detail in result.analysis_details %}
+                    <div class="detail-card">
+                        <strong>{{ detail.test_name }}</strong>
+                        <ul>
+                            {% for d in detail.details %}
+                            <li>{{ d }}</li>
+                            {% endfor %}
+                        </ul>
+                        <span class="badge bg-primary">Score: {{ detail.score }}/20</span>
+                    </div>
+                    {% endfor %}
                 </div>
-
-                <!-- Confidence Bar -->
-                <div class="mt-4">
-                    <div class="confidence-label">
-                        <span>Confidence</span>
-                        <span>{{ result.confidence }}%</span>
-                    </div>
-                    <div class="progress">
-                        <div class="progress-bar" role="progressbar" style="width: {{ result.confidence }}%;" aria-valuenow="{{ result.confidence }}" aria-valuemin="0" aria-valuemax="100">
-                            {{ result.confidence }}%
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Image Details -->
-                <div class="details">
-                    <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Image Details</h5>
-                    <div class="detail-item">
-                        <span class="detail-label">Format</span>
-                        <span class="detail-value">{{ result.format }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Dimensions</span>
-                        <span class="detail-value">{{ result.width }} x {{ result.height }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Laplacian Variance</span>
-                        <span class="detail-value">{{ result.variance }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Analysis Method</span>
-                        <span class="detail-value">Edge Sharpness (Heuristic)</span>
-                    </div>
-                </div>
-
-                <!-- Note -->
-                <div class="alert alert-info mt-3" role="alert">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Lower variance suggests smoother image (possible AI-generated). This is a simple heuristic — a real ML model will be integrated soon.
-                </div>
-<!-- Inside the card-body, after the image preview and before the details -->
-
-
-
-          <!-- Back Button -->
+                <!-- BUTTONS -->
                 <div class="text-center mt-4">
-                    <a href="/" class="btn btn-primary">
-                        <i class="fas fa-arrow-left me-2"></i>Analyze Another Image
-                    </a>
+                    <a href="/" class="btn-main">Analyze Another</a>
+                    <button onclick="downloadReport()" class="btn-secondary">Download Report</button>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
+</div>
+<script>
+function downloadReport() {
+    const result = {{ result|tojson }};
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p class="mb-0">&copy; 2025 AI Image Detector. All rights reserved. | 
-                <a href="#">Privacy</a> | <a href="#">Terms</a>
-            </p>
-        </div>
-    </footer>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "report.json";
+    a.click();
+}
+</script>
 </body>
 </html>
