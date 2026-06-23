@@ -1,18 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import os
 from werkzeug.utils import secure_filename
-import predict
-from flask import send_from_directory
-
+import uuid
+from predict import analyze_image
 
 app = Flask(__name__)
+app.secret_key = 'your-secret-key-here-change-in-production'
 
-UPLOAD_FOLDER = 'uploads'
+# Configuration
+UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
+MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
+# Ensure upload directory exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def allowed_file(filename):
@@ -22,33 +25,56 @@ def allowed_file(filename):
 def index():
     return render_template('Main.html')
 
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
+@app.route('/predict', methods=['POST'])
+def predict():
     if 'file' not in request.files:
-        return redirect(request.url)
+        flash('No file selected')
+        return redirect(url_for('index'))
+    
     file = request.files['file']
+    
     if file.filename == '':
-        return redirect(request.url)
+        flash('No file selected')
+        return redirect(url_for('index'))
+    
     if file and allowed_file(file.filename):
+        # Generate unique filename
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        ext = filename.rsplit('.', 1)[1].lower()
+        unique_filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(filepath)
-
-        # Get prediction from our heuristic function
-        result = predict.predict_image(filepath)
-
-        # Optionally delete the file after processing
-        # os.remove(filepath)
-
-        return render_template('result.html', result=result, filename=filename)
+        
+        # Analyze image
+        result = analyze_image(filepath)
+        
+        # Store results in session for result page
+        session['result'] = result
+        session['image_path'] = f"uploads/{unique_filename}"
+        
+        return redirect(url_for('result'))
     else:
-        return "File type not allowed", 400
+        flash('Invalid file type. Please upload an image file.')
+        return redirect(url_for('index'))
+
+@app.route('/result')
+def result():
+    if 'result' not in session:
+        return redirect(url_for('index'))
+    
+    result = session.get('result')
+    image_path = session.get('image_path')
+    
+    # Clear session data
+    session.pop('result', None)
+    session.pop('image_path', None)
+    
+    return render_template('result.html', result=result, image_path=image_path)
+
+@app.errorhandler(413)
+def too_large(e):
+    flash('File is too large. Maximum size is 16MB.')
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    print("Hello")
     app.run(debug=True)

@@ -1,0 +1,175 @@
+<html>
+<head>
+    <title>AI Image Detector - Results</title>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1a1a2e);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+        @keyframes gradientBG {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
+        }
+        .navbar {
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.9);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: #4b6cb7 !important;
+        }
+        .container-main {
+            padding: 60px 20px;
+        }
+        .result-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .verdict {
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 30px;
+            margin-bottom: 30px;
+        }
+        .ai { background: #ffe5e5; color: #c00; }
+        .real { background: #e6ffe6; color: #0a0; }
+        .image-preview img {
+            width: 60%;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .confidence-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #4b6cb7;
+        }
+        .progress {
+            height: 18px;
+            border-radius: 10px;
+            margin: 15px auto;
+            width: 60%;
+        }
+        .progress-bar {
+            background: linear-gradient(135deg, #4b6cb7, #182848);
+        }
+
+        .detail-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px auto;
+            max-width: 700px;
+            text-align: left;
+            backdrop-filter: blur(6px);
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, #4b6cb7, #182848);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border-radius: 25px;
+            padding: 12px 25px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="/">AI Image Detector</a>
+    </div>
+</nav>
+<div class="container container-main">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="result-card">
+                {% if result.error %}
+                    <div class="alert alert-danger">{{ result.error }}</div>
+                    <a href="/" class="btn-main">Go Back</a>
+                {% else %}
+                <!-- Verdict -->
+                {% if result.is_ai_generated %}
+                    <div class="verdict ai">🤖 AI Generated Image</div>
+                {% else %}
+                    <div class="verdict real">📷 Real Image</div>
+                {% endif %}
+                <!-- IMAGE CENTER -->
+                <div class="image-preview">
+                    <img src="{{ url_for('static', filename=image_path) }}">
+                </div>
+                <!-- CONFIDENCE BELOW IMAGE -->
+                <h4>Confidence Score</h4>
+                <div class="confidence-value">{{ result.confidence }}%</div>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ result.confidence }}%"></div>
+                </div>
+                <p class="text-muted">
+                    {% if result.confidence < 40 %}
+                        Low confidence
+                    {% elif result.confidence < 70 %}
+                        Medium confidence
+                    {% else %}
+                        High confidence
+                    {% endif %}
+                </p>
+                <!-- DETAILS CENTER CARDS -->
+                <div class="mt-5">
+                    <h4>Detailed Analysis</h4>
+                    {% for detail in result.analysis_details %}
+                    <div class="detail-card">
+                        <strong>{{ detail.test_name }}</strong>
+                        <ul>
+                            {% for d in detail.details %}
+                            <li>{{ d }}</li>
+                            {% endfor %}
+                        </ul>
+                        <span class="badge bg-primary">Score: {{ detail.score }}/20</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <!-- BUTTONS -->
+                <div class="text-center mt-4">
+                    <a href="/" class="btn-main">Analyze Another</a>
+                    <button onclick="downloadReport()" class="btn-secondary">Download Report</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function downloadReport() {
+    const result = {{ result|tojson }};
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "report.json";
+    a.click();
+}
+</script>
+</body>
+</html>

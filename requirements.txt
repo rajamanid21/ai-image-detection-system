@@ -1,4 +1,5 @@
-Flask
-opencv-python
-Pillow
-Werkzeug
+Flask==2.3.3
+opencv-python==4.8.1.78
+Pillow==10.1.0
+numpy==1.24.3
+Werkzeug==2.3.7
